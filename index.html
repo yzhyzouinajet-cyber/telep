@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Téléphone interactif</title>
+
+  <!-- CSS pour style du téléphone et position dans l'iPhone -->
+  <style>
+    body {
+      margin:0;
+      background:#111;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      height:100vh;
+      font-family:Arial, sans-serif;
+    }
+
+    .mockup {
+      position: relative;
+      width: 360px; /* largeur de l'image iPhone */
+    }
+
+    .mockup img {
+      width:100%;
+      display:block;
+    }
+
+    .screen-area {
+      position:absolute;
+      top:12%;   /* ajuste selon ton PNG */
+      left:12%;  /* ajuste selon ton PNG */
+      width:76%;
+      height:60%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* Téléphone à l'intérieur de l'écran */
+    .phone-ui {
+      width:100%;
+      height:100%;
+      border-radius:12px;
+      background: linear-gradient(#1e1e1e,#0f0f0f);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      padding:10px;
+      box-sizing:border-box;
+    }
+
+    .phone-ui input {
+      width:100%;
+      text-align:center;
+      font-size:18px;
+      padding:8px;
+      border-radius:8px;
+      border:none;
+      margin-bottom:10px;
+    }
+
+    .buttons {
+      display:grid;
+      grid-template-columns:repeat(3,1fr);
+      gap:8px;
+      flex:1;
+      align-content:center;
+      width:100%;
+    }
+
+    .buttons button {
+      padding:12px;
+      font-size:16px;
+      border-radius:50%;
+      border:none;
+      background:#444;
+      color:white;
+      cursor:pointer;
+    }
+
+    .call-btn {
+      margin-top:10px;
+      width:100%;
+      padding:10px;
+      border-radius:10px;
+      border:none;
+      background:#0ea25f;
+      color:white;
+      font-size:16px;
+      cursor:pointer;
+    }
+
+    .message {
+      display:none;
+      margin-top:10px;
+      text-align:center;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="mockup">
+    <!-- Image iPhone -->
+    <img src="iphone-frame.png" alt="iPhone">
+
+    <!-- Zone écran -->
+    <div class="screen-area">
+      <div class="phone-ui">
+        <input id="numero" type="text" placeholder="Composez le numéro" readonly>
+        <div class="buttons">
+          <button onclick="ajouter('1')">1</button>
+          <button onclick="ajouter('2')">2</button>
+          <button onclick="ajouter('3')">3</button>
+          <button onclick="ajouter('4')">4</button>
+          <button onclick="ajouter('5')">5</button>
+          <button onclick="ajouter('6')">6</button>
+          <button onclick="ajouter('7')">7</button>
+          <button onclick="ajouter('8')">8</button>
+          <button onclick="ajouter('9')">9</button>
+          <button onclick="ajouter('*')">*</button>
+          <button onclick="ajouter('0')">0</button>
+          <button onclick="ajouter('#')">#</button>
+        </div>
+
+        <button class="call-btn" onclick="verifier()">📞 Appeler</button>
+
+        <div id="message" class="message">
+          <p>🎤 Message vocal débloqué !</p>
+          <audio controls>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+          </audio>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- JS pour le téléphone -->
+  <script>
+    function ajouter(n){
+      document.getElementById('numero').value += n;
+    }
+
+    function verifier(){
+      const numero = document.getElementById('numero').value;
+      if(numero === "0775267888"){ // Numéro correct
+        document.getElementById('message').style.display = 'block';
+      } else {
+        alert('Numéro incorrect !');
+        document.getElementById('numero').value = '';
+      }
+    }
+  </script>
+
+</body>
+</html>
