@@ -3,17 +3,11 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title></title>
+<title> </title>
 <style>
-  body{margin:0;font-family:sans-serif;background:#222;display:flex;justify-content:center;align-items:center;height:100vh}
-  .frame{position:relative;width:400px;max-width:90%}
-  .frame img{width:100%;display:block}
-  .screen{
-    position:absolute;top:16%;left:9%;width:82%;height:68%;
-    background:#fff;border-radius:28px;box-shadow:inset 0 0 8px rgba(0,0,0,0.2);
-    display:flex;flex-direction:column;align-items:center;padding:10px;box-sizing:border-box
-  }
-  .display{width:100%;background:#f0f3f9;border-radius:12px;padding:12px;text-align:center;min-height:50px;margin-bottom:10px;position:relative}
+  body{margin:0;font-family:sans-serif;background:#eef4fb;display:flex;justify-content:center;align-items:center;height:100vh}
+  .phone{width:320px;background:#fff;border-radius:20px;box-shadow:0 8px 20px rgba(0,0,0,0.2);padding:15px;display:flex;flex-direction:column;align-items:center}
+  .display{width:100%;background:#f0f3f9;border-radius:12px;padding:15px;text-align:center;min-height:60px;margin-bottom:10px;position:relative}
   .typed{font-size:20px;font-weight:bold;letter-spacing:2px}
   .error-banner{display:none;color:#c92a2a;font-weight:bold;margin-top:5px}
   .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin-bottom:10px}
@@ -37,30 +31,27 @@
 </style>
 </head>
 <body>
-  <div class="frame">
-    <img src="frame.png" alt="iPhone frame">
-    <div class="screen">
-      <div class="display">
-        <div class="typed" id="typedNumber"> </div>
-        <div class="error-banner" id="numError">Erreur — numéro inconnu</div>
-      </div>
-      <div class="keypad" id="keypad">
-        <div class="key" data-key="1">1</div>
-        <div class="key" data-key="2">2</div>
-        <div class="key" data-key="3">3</div>
-        <div class="key" data-key="4">4</div>
-        <div class="key" data-key="5">5</div>
-        <div class="key" data-key="6">6</div>
-        <div class="key" data-key="7">7</div>
-        <div class="key" data-key="8">8</div>
-        <div class="key" data-key="9">9</div>
-        <div class="key" data-key="0">0</div>
-      </div>
-      <div class="controls">
-        <button class="btn back" id="backBtn">←</button>
-        <button class="btn call" id="callBtn">Appeler</button>
-        <button class="btn clear" id="clearBtn">Effacer</button>
-      </div>
+  <div class="phone">
+    <div class="display">
+      <div class="typed" id="typedNumber"> </div>
+      <div class="error-banner" id="numError">Erreur — numéro inconnu</div>
+    </div>
+    <div class="keypad" id="keypad">
+      <div class="key" data-key="1">1</div>
+      <div class="key" data-key="2">2</div>
+      <div class="key" data-key="3">3</div>
+      <div class="key" data-key="4">4</div>
+      <div class="key" data-key="5">5</div>
+      <div class="key" data-key="6">6</div>
+      <div class="key" data-key="7">7</div>
+      <div class="key" data-key="8">8</div>
+      <div class="key" data-key="9">9</div>
+      <div class="key" data-key="0">0</div>
+    </div>
+    <div class="controls">
+      <button class="btn back" id="backBtn">←</button>
+      <button class="btn call" id="callBtn">Appeler</button>
+      <button class="btn clear" id="clearBtn">Effacer</button>
     </div>
   </div>
 
