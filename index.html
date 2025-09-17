@@ -1,157 +1,234 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Téléphone interactif</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Messagerie iPhone — Simulation</title>
+<style>
+  :root{
+    --bg:#e9eef6;
+    --card:#fff;
+    --muted:#6b7280;
+    --accent:#007aff;
+    --glass: rgba(255,255,255,0.75);
+  }
+  html,body{height:100%;margin:0;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:linear-gradient(180deg,#f0f4ff, #e9eef6); color:#111}
+  .wrap{max-width:430px;margin:28px auto;padding:16px;box-sizing:border-box}
+  .stage{position:relative;width:100%;padding-top:200%; /* aspect ratio box */ background:none}
+  .frame{
+    position:absolute; left:0; right:0; top:0; bottom:0;
+    background-image: url('frame.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center top;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding-top:6.8%; /* tweak where content sits inside the phone frame */
+    box-sizing:border-box;
+  }
 
-  <!-- CSS pour style du téléphone et position dans l'iPhone -->
-  <style>
-    body {
-      margin:0;
-      background:#111;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      height:100vh;
-      font-family:Arial, sans-serif;
-    }
+  /* content inside phone */
+  .screen{
+    width:86%;
+    height:78%;
+    background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(250,250,250,0.95));
+    border-radius:18px;
+    box-shadow: 0 8px 20px rgba(2,6,23,0.12);
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
 
-    .mockup {
-      position: relative;
-      width: 360px; /* largeur de l'image iPhone */
-    }
+  /* top bar */
+  .topbar{
+    padding:12px 14px; display:flex; align-items:center; justify-content:space-between; background:transparent;
+  }
+  .carrier{font-weight:600}
+  .call-link{font-size:14px; text-decoration:none; color:var(--accent); display:flex; gap:8px; align-items:center}
+  .dot{width:8px;height:8px;border-radius:50%;background:#34c759; box-shadow:0 0 6px rgba(52,199,89,0.25)}
 
-    .mockup img {
-      width:100%;
-      display:block;
-    }
+  /* main content */
+  .content{padding:8px 14px; flex:1; display:flex; flex-direction:column; gap:8px}
+  h1{margin:6px 0 2px 0;font-size:18px}
+  p.desc{color:var(--muted);font-size:13px;margin:0 0 8px 0}
 
-    .screen-area {
-      position:absolute;
-      top:20%;   /* ajuste selon ton PNG */
-      left:15%;  /* ajuste selon ton PNG */
-      width:68%;
-      height:53%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
+  .vm-list{background:#f7f8fb;border-radius:12px;padding:8px; display:flex; flex-direction:column; gap:8px; max-height:150px; overflow:auto}
+  .vm-item{display:flex; gap:10px; align-items:center; padding:8px; border-radius:10px; background:white}
+  .avatar{width:44px;height:44px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;font-weight:700}
+  .meta{flex:1}
+  .meta .name{font-weight:700}
+  .meta .sub{font-size:12px;color:var(--muted)}
 
-    /* Téléphone à l'intérieur de l'écran */
-    .phone-ui {
-      width:100%;
-      height:100%;
-      border-radius:12px;
-      background: linear-gradient(#1e1e1e,#0f0f0f);
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      padding:10px;
-      box-sizing:border-box;
-    }
+  /* code block */
+  .auth{margin-top:10px; display:flex; gap:8px; align-items:center}
+  input[type="text"]{flex:1;padding:10px;border-radius:10px;border:1px solid #e0e3e8;font-size:15px;box-sizing:border-box}
+  button.primary{padding:10px 14px;border-radius:10px;border:0;background:var(--accent);color:white;font-weight:700;cursor:pointer}
+  button.ghost{background:transparent;border:1px solid rgba(0,122,255,0.12);color:var(--accent);padding:8px 10px;border-radius:9px;cursor:pointer}
 
-    .phone-ui input {
-      width:100%;
-      text-align:center;
-      font-size:18px;
-      padding:8px;
-      border-radius:8px;
-      border:none;
-      margin-bottom:10px;
-    }
+  .msg-error{color:#c92a2a;font-size:13px;margin-top:8px;display:none}
+  .msg-success{color:#027a48;font-size:13px;margin-top:8px;display:none}
 
-    .buttons {
-      display:grid;
-      grid-template-columns:repeat(3,1fr);
-      gap:8px;
-      flex:1;
-      align-content:center;
-      width:100%;
-    }
+  .footer{padding:10px 14px;background:transparent;text-align:center;color:var(--muted);font-size:12px}
 
-    .buttons button {
-      padding:12px;
-      font-size:16px;
-      border-radius:50%;
-      border:none;
-      background:#444;
-      color:white;
-      cursor:pointer;
-    }
-
-    .call-btn {
-      margin-top:10px;
-      width:100%;
-      padding:10px;
-      border-radius:10px;
-      border:none;
-      background:#0ea25f;
-      color:white;
-      font-size:16px;
-      cursor:pointer;
-    }
-
-    .message {
-      display:none;
-      margin-top:10px;
-      text-align:center;
-    }
-  </style>
+  /* small screens */
+  @media (max-width:420px){
+    .wrap{margin:12px}
+    .screen{border-radius:14px}
+    .vm-list{max-height:120px}
+  }
+</style>
 </head>
-
 <body>
+  <div class="wrap">
+    <div style="text-align:center;margin-bottom:8px;font-size:13px;color:var(--muted)">Simulation iPhone — place ton PNG `frame.png` dans le même dossier</div>
 
-  <div class="mockup">
-    <!-- Image iPhone -->
-    <img src="iphone-frame.png" alt="iPhone">
+    <div class="stage" aria-hidden="false">
+      <div class="frame" role="img" aria-label="Cadre iPhone (remplacer frame.png)">
+        <div class="screen" id="screen">
+          <div class="topbar">
+            <div class="carrier">Opérateur</div>
+            <a class="call-link" href="tel:0755221314"> <span class="dot" aria-hidden="true"></span> 07 55 22 13 14 </a>
+          </div>
 
-    <!-- Zone écran -->
-    <div class="screen-area">
-      <div class="phone-ui">
-        <input id="numero" type="text" placeholder="Composez le numéro" readonly>
-        <div class="buttons">
-          <button onclick="ajouter('1')">1</button>
-          <button onclick="ajouter('2')">2</button>
-          <button onclick="ajouter('3')">3</button>
-          <button onclick="ajouter('4')">4</button>
-          <button onclick="ajouter('5')">5</button>
-          <button onclick="ajouter('6')">6</button>
-          <button onclick="ajouter('7')">7</button>
-          <button onclick="ajouter('8')">8</button>
-          <button onclick="ajouter('9')">9</button>
-          <button onclick="ajouter('*')">*</button>
-          <button onclick="ajouter('0')">0</button>
-          <button onclick="ajouter('#')">#</button>
-        </div>
+          <div class="content">
+            <h1>Messagerie vocale</h1>
+            <p class="desc">Interface factice — aucune connexion à ton opérateur. Clique pour simuler.</p>
 
-        <button class="call-btn" onclick="verifier()">📞 Appeler</button>
+            <div class="vm-list" id="vmList" aria-live="polite">
+              <!-- messages rendered by JS -->
+            </div>
 
-        <div id="message" class="message">
-          <p>🎤 Message vocal débloqué !</p>
-          <audio controls>
-            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-          </audio>
+            <div style="display:flex;gap:8px;align-items:center;justify-content:space-between">
+              <div style="font-size:13px;color:var(--muted)">Entrer le code pour accéder</div>
+              <button class="ghost" id="openVmBtn">Afficher</button>
+            </div>
+
+            <div class="auth" id="authArea" style="margin-top:6px">
+              <input type="text" id="codeInput" placeholder="Code secret">
+              <button class="primary" id="submitBtn">Valider</button>
+            </div>
+
+            <div class="msg-error" id="errMsg">Code incorrect. Essais restants : <span id="tries">5</span></div>
+            <div class="msg-success" id="okMsg">Code correct — redirection...</div>
+
+          </div>
+
+          <div class="footer">Simulation — aucun message réel n'est reçu ni envoyé</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- JS pour le téléphone -->
-  <script>
-    function ajouter(n){
-      document.getElementById('numero').value += n;
-    }
+<script>
+(function(){
+  // Config
+  const PHONE = '0755221314';
+  const CORRECT = '1798';
+  const REDIRECT = 'https://sites.google.com/d/1zvWlBSykvZvoG18Gjn02ghG2BxkD2vyK/p/1-FRJK-HhCT25s0XLjAbXvYtJ7KznYyb_/edit';
+  const STORAGE_KEY = 'vm_sim_tries';
+  const MAX_TRIES = 5;
 
-    function verifier(){
-      const numero = document.getElementById('numero').value;
-      if(numero === "0775267888"){ // Numéro correct
-        document.getElementById('message').style.display = 'block';
+  // Fake messages
+  const messages = [
+    {id:1, from:'Alice', when:"Aujourd'hui 09:12", text:'Salut, rappelle-moi stp.'},
+    {id:2, from:'Opérateur', when:'Hier 18:04', text:'Votre rendez-vous est confirmé.'},
+    {id:3, from:'Bob', when:'Lun 10:23', text:'Message test...'}
+  ];
+
+  // DOM
+  const vmList = document.getElementById('vmList');
+  const openVmBtn = document.getElementById('openVmBtn');
+  const authArea = document.getElementById('authArea');
+  const codeInput = document.getElementById('codeInput');
+  const submitBtn = document.getElementById('submitBtn');
+  const errMsg = document.getElementById('errMsg');
+  const okMsg = document.getElementById('okMsg');
+  const triesSpan = document.getElementById('tries');
+
+  // init tries
+  function getTries(){ const v=localStorage.getItem(STORAGE_KEY); return v?Number(v):MAX_TRIES; }
+  function setTries(n){ localStorage.setItem(STORAGE_KEY,String(n)); triesSpan.textContent = n; }
+
+  setTries(getTries());
+
+  // render messages
+  function render(){
+    vmList.innerHTML = '';
+    messages.forEach(m=>{
+      const item = document.createElement('div');
+      item.className = 'vm-item';
+      item.innerHTML = `
+        <div class="avatar">${m.from.charAt(0)}</div>
+        <div class="meta">
+          <div class="name">${m.from}</div>
+          <div class="sub">${m.when} — ${m.text}</div>
+        </div>
+        <div>
+          <button class="ghost play" data-id="${m.id}">Lire</button>
+        </div>
+      `;
+      vmList.appendChild(item);
+    });
+    // play handlers (simulate)
+    vmList.querySelectorAll('.play').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        alert('Lecture simulée du message — ceci est une simulation.');
+      });
+    });
+  }
+
+  render();
+
+  // show/hide vm list
+  openVmBtn.addEventListener('click', ()=>{
+    if(vmList.style.display === 'none' || vmList.style.display === ''){
+      vmList.style.display = 'flex';
+      openVmBtn.textContent = 'Masquer';
+    } else {
+      vmList.style.display = 'none';
+      openVmBtn.textContent = 'Afficher';
+    }
+  });
+
+  // submit code
+  function submit(){
+    const code = (codeInput.value||'').trim();
+    let tries = getTries();
+    if(tries <= 0){
+      errMsg.textContent = "Trop d'essais. Réinitialisez le stockage local pour recommencer.";
+      errMsg.style.display = 'block';
+      okMsg.style.display = 'none';
+      return;
+    }
+    if(code === CORRECT){
+      errMsg.style.display = 'none';
+      okMsg.style.display = 'block';
+      // small delay then redirect
+      setTimeout(()=>{ window.location.href = REDIRECT; }, 700);
+    } else {
+      tries = tries - 1;
+      setTries(tries);
+      errMsg.style.display = 'block';
+      okMsg.style.display = 'none';
+      if(tries <= 0){
+        errMsg.textContent = "Trop d'essais. Réinitialisez le stockage local pour recommencer.";
       } else {
-        alert('Numéro incorrect !');
-        document.getElementById('numero').value = '';
+        errMsg.textContent = "Code incorrect. Essais restants : " + tries;
       }
     }
-  </script>
+  }
 
+  submitBtn.addEventListener('click', submit);
+  codeInput.addEventListener('keydown', function(e){ if(e.key === 'Enter') submit(); });
+
+  // preservez phone link (for UX)
+  document.querySelectorAll('.call-link').forEach(a=>{
+    a.href = 'tel:' + PHONE;
+    a.addEventListener('click', ()=>{ /* user agent will open phone app on mobile */ });
+  });
+
+})();
+</script>
 </body>
 </html>
