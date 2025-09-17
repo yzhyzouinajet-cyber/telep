@@ -83,13 +83,16 @@
 
 <script>
 (function(){
-  const TARGET_PHONE = "0755221314"; // numéro attendu
+  // CONFIG : modifie ici si besoin
+  const TARGET_PHONE = "0755221314"; // numéro attendu (sans espaces)
   const CORRECT = "1798";            // code secret
-  const REDIRECT = "https://sites.google.com"; // redirection
+  const REDIRECT = "https://sites.google.com"; // lien après succès
 
+  // état
   let typed = "";
   let vmCode = "";
 
+  // DOM
   const typedEl = document.getElementById("typedNumber");
   const numError = document.getElementById("numError");
   const overlay = document.getElementById("overlay");
@@ -97,9 +100,11 @@
   const vmError = document.getElementById("vmError");
   const vmSuccess = document.getElementById("vmSuccess");
 
+  // affichage du numéro tapé
   function renderTyped(){ typedEl.textContent = typed || " "; }
   renderTyped();
 
+  // touches du clavier principal
   document.getElementById("keypad").addEventListener("click",(e)=>{
     const k = e.target.dataset.key;
     if(!k) return;
@@ -107,50 +112,71 @@
     renderTyped();
   });
 
-  document.getElementById("backBtn").onclick = ()=>{ typed=typed.slice(0,-1); renderTyped(); };
-  document.getElementById("clearBtn").onclick = ()=>{ typed=""; renderTyped(); };
+  document.getElementById("backBtn").onclick = ()=>{ typed = typed.slice(0,-1); renderTyped(); };
+  document.getElementById("clearBtn").onclick = ()=>{ typed = ""; renderTyped(); };
 
+  // Appel : si le numéro correspond, ouvrir le répondeur ; sinon afficher l'erreur
   document.getElementById("callBtn").onclick = ()=>{
     const normalized = typed.replace(/\D/g,"");
     const targetNorm = TARGET_PHONE.replace(/\D/g,"");
-    if(normalized === targetNorm){
-      overlay.style.display="flex";
-      vmCode="";
+    if(normalized === targetNorm && normalized.length>0){
+      overlay.style.display = "flex";
+      vmCode = "";
       updateCode();
-      vmError.style.display="none";
-      vmSuccess.style.display="none";
+      vmError.style.display = "none";
+      vmSuccess.style.display = "none";
     } else {
-      numError.style.display="block";
-      setTimeout(()=>{ numError.style.display="none"; },2000);
+      numError.style.display = "block";
+      setTimeout(()=>{ numError.style.display = "none"; },1800);
     }
   };
 
+  // affichage du code dans le répondeur
   function updateCode(){
     codeDisplay.textContent = vmCode.padEnd(4,"•").split("").join(" ");
   }
 
+  // touches du répondeur
   document.getElementById("vmPad").addEventListener("click",(e)=>{
     const k = e.target.dataset.key;
     if(!k) return;
-    if(vmCode.length<4){
-      vmCode+=k;
+    if(vmCode.length < 4){
+      vmCode += k;
       updateCode();
     }
   });
 
-  document.getElementById("vmOk").onclick=()=>{
-    if(vmCode===CORRECT){
-      vmSuccess.style.display="block";
-      vmError.style.display="none";
-      setTimeout(()=>{ window.location.href=REDIRECT; },1000);
+  // validation du code : **illimité** (aucune restriction d'essais)
+  document.getElementById("vmOk").onclick = ()=>{
+    if(vmCode === CORRECT){
+      vmSuccess.style.display = "block";
+      vmError.style.display = "none";
+      setTimeout(()=>{ window.location.href = REDIRECT; },800);
     } else {
-      vmError.style.display="block";
-      vmSuccess.style.display="none";
-      vmCode="";
+      vmError.style.display = "block";
+      vmSuccess.style.display = "none";
+      vmCode = "";
       updateCode();
     }
   };
-  document.getElementById("vmCancel").onclick=()=>{ overlay.style.display="none"; };
+
+  document.getElementById("vmCancel").onclick = ()=>{ overlay.style.display = "none"; };
+
+  // support clavier physique : chiffres, backspace, enter
+  document.addEventListener("keydown",(e)=>{
+    if(overlay.style.display === "flex"){
+      if(e.key >= "0" && e.key <= "9"){ if(vmCode.length < 4){ vmCode += e.key; updateCode(); } }
+      else if(e.key === "Backspace"){ vmCode = vmCode.slice(0,-1); updateCode(); }
+      else if(e.key === "Enter"){ document.getElementById("vmOk").click(); }
+      else if(e.key === "Escape"){ overlay.style.display = "none"; }
+      e.preventDefault();
+    } else {
+      if(e.key >= "0" && e.key <= "9"){ typed += e.key; renderTyped(); e.preventDefault(); }
+      else if(e.key === "Backspace"){ typed = typed.slice(0,-1); renderTyped(); e.preventDefault(); }
+      else if(e.key === "Enter"){ document.getElementById("callBtn").click(); e.preventDefault(); }
+    }
+  });
+
 })();
 </script>
 </body>
