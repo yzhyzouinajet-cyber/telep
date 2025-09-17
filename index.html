@@ -3,94 +3,68 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title></title>
+<title>Faux téléphone — simulation d'appel</title>
 <style>
   :root{
     --bg: #eef4fb;
-    --phone-bg: #0b1220;
     --screen: #f7f9fb;
     --accent: #007aff;
     --muted: #6b7280;
-    --glass: rgba(255,255,255,0.85);
+    --error: #c92a2a;
   }
-  html,body{height:100%;margin:0;font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial; background:var(--bg); color:#111}
+  html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial;background:var(--bg);color:#111}
   .wrap{max-width:420px;margin:18px auto;padding:12px;box-sizing:border-box}
-  .stage{position:relative;width:100%;padding-top:200%} /* aspect box */
+  .stage{position:relative;width:100%;padding-top:200%}
   .frame{
-    position:absolute; left:0; right:0; top:0; bottom:0;
+    position:absolute; inset:0;
     display:flex; align-items:flex-start; justify-content:center;
-    background: url('frame.png') no-repeat center top;
-    background-size: contain;
+    background:url('frame.png') no-repeat center top;
+    background-size:contain;
     padding-top:6.6%;
     box-sizing:border-box;
   }
-
-  /* Phone screen inside frame */
   .phone {
-    width:86%;
-    height:78%;
+    width:86%; height:78%;
     background:linear-gradient(180deg,var(--screen),#eef3f8);
-    border-radius:18px;
-    box-shadow: 0 10px 28px rgba(0,0,0,0.15);
-    overflow:hidden;
-    display:flex;
-    flex-direction:column;
+    border-radius:18px; box-shadow:0 10px 28px rgba(0,0,0,0.15);
+    overflow:hidden; display:flex; flex-direction:column;
   }
-
-  /* Top area - shows number */
-  .topbar{padding:12px 14px; display:flex; justify-content:center; align-items:center; border-bottom:1px solid rgba(0,0,0,0.04)}
-  .topbar .number {font-weight:700; font-size:18px; letter-spacing:1px}
-  .topbar .muted {font-size:12px;color:var(--muted); margin-left:8px; font-weight:600}
-
-  /* main screen */
   .main {padding:14px; display:flex; flex-direction:column; align-items:center; gap:12px; flex:1}
-
-  /* display area for typed digits */
   .display {
-    width:100%;
-    background:linear-gradient(180deg,#ffffff,#f3f6fb);
+    width:100%; background:linear-gradient(180deg,#ffffff,#f3f6fb);
     padding:14px; border-radius:12px; text-align:center; box-sizing:border-box;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.6); min-height:72px; position:relative;
   }
   .display .typed {font-size:22px; letter-spacing:2px; font-weight:700}
   .display .hint {font-size:13px;color:var(--muted); margin-top:6px}
-
-  /* keypad */
+  .display .error-banner {
+    position:absolute; left:12px; right:12px; bottom:8px;
+    background:rgba(201,42,42,0.06); color:var(--error); border:1px solid rgba(201,42,42,0.12);
+    padding:8px 10px; border-radius:8px; font-weight:700; display:none;
+  }
   .keypad {width:100%; display:grid; grid-template-columns: repeat(3,1fr); gap:10px; margin-top:8px}
   .key {background:white; border-radius:12px; padding:14px 0; text-align:center; font-size:18px; font-weight:700; cursor:pointer; user-select:none; box-shadow: 0 6px 14px rgba(2,6,23,0.06)}
-  .key.small {font-size:14px; font-weight:600; color:var(--muted)}
+  .key .small {font-size:12px; font-weight:600; color:var(--muted)}
   .controls {display:flex; gap:10px; width:100%; margin-top:10px}
   .btn {flex:1; padding:12px 8px; border-radius:12px; border:0; cursor:pointer; font-weight:800}
   .btn.call {background:linear-gradient(180deg,#10b981,#059669); color:white}
   .btn.back {background:#fff;border:1px solid rgba(2,6,23,0.06)}
   .btn.clear {background:#ff3b30; color:white}
-
-  /* mailbox screen overlay */
-  .overlay {
-    position:absolute; inset:0; display:flex; align-items:center; justify-content:center; padding:20px;
-    background:linear-gradient(180deg, rgba(2,6,23,0.35), rgba(2,6,23,0.35));
-    backdrop-filter: blur(2px);
-    box-sizing:border-box;
-    display:none;
-  }
-  .voicemail {
-    width:92%; max-width:360px; background:white; border-radius:14px; padding:18px; text-align:center; box-shadow:0 18px 40px rgba(2,6,23,0.25)
-  }
+  .overlay {position:absolute; inset:0; display:none; align-items:center; justify-content:center; padding:20px;
+    background:rgba(2,6,23,0.35); backdrop-filter: blur(2px); box-sizing:border-box;}
+  .voicemail {width:92%; max-width:360px; background:white; border-radius:14px; padding:18px; text-align:center; box-shadow:0 18px 40px rgba(2,6,23,0.25)}
   .voicemail h2 {margin:0 0 8px 0; font-size:18px}
   .voicemail p {margin:0 0 12px 0; color:var(--muted)}
   .code-display {font-size:20px; letter-spacing:2px; font-weight:800; margin-bottom:10px}
-  .voicemail .pad {display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
+  .pad {display:flex; gap:8px; justify-content:center; flex-wrap:wrap}
   .vm-key {width:52px;height:44px;border-radius:8px;background:#f2f4f8;display:flex;align-items:center;justify-content:center;font-weight:800;cursor:pointer}
   .vm-actions {display:flex; gap:10px; margin-top:12px}
   .vm-actions button {flex:1;padding:10px;border-radius:10px;border:0; font-weight:700; cursor:pointer}
   .vm-actions .ok {background:var(--accent); color:white}
   .vm-actions .cancel {background:#eee}
-
-  .error {color:#c92a2a;margin-top:8px; display:none}
+  .error {color:var(--error);margin-top:8px; display:none}
   .success {color:#15803d;margin-top:8px; display:none}
-
   .small {font-size:12px;color:var(--muted); margin-top:8px}
-
   @media (max-width:420px){
     .wrap {margin:8px}
     .vm-key {width:44px;height:40px}
@@ -99,18 +73,14 @@
 </head>
 <body>
   <div class="wrap">
-    <div class="stage" aria-hidden="false">
-      <div class="frame" role="img" aria-label="Cadre téléphone (optionnel frame.png)">
+    <div class="stage">
+      <div class="frame">
         <div class="phone" id="phone">
-          <div class="topbar">
-            <div class="number">07 55 22 13 14</div>
-            <div class="muted" style="margin-left:10px">Faux téléphone</div>
-          </div>
-
           <div class="main">
             <div class="display" aria-live="polite">
               <div class="typed" id="typedNumber"> </div>
               <div class="hint">Composez le numéro puis appuyez sur <strong>Appeler</strong></div>
+              <div class="error-banner" id="numError">Erreur — numéro inconnu</div>
             </div>
 
             <div class="keypad" id="keypad">
@@ -134,18 +104,16 @@
               <button class="btn clear" id="clearBtn">Effacer tout</button>
             </div>
 
-            <div class="small">Le téléphone est factice — l'appel est simulé et mène au répondeur.</div>
+            <div class="small">Le téléphone est factice — l'appel est simulé.</div>
           </div>
         </div>
 
-        <!-- overlay voicemail -->
+        <!-- Overlay répondeur -->
         <div class="overlay" id="overlay">
-          <div class="voicemail" role="dialog" aria-modal="true" aria-labelledby="vmTitle">
-            <h2 id="vmTitle">Répondeur automatique</h2>
-            <p>Vous êtes bien tombé sur la messagerie. Veuillez saisir le code secret à 4 chiffres.</p>
-
+          <div class="voicemail">
+            <h2>Répondeur automatique</h2>
+            <p>Veuillez saisir le code secret à 4 chiffres.</p>
             <div class="code-display" id="codeDisplay">— — — —</div>
-
             <div class="pad" id="vmPad">
               <div class="vm-key" data-key="1">1</div>
               <div class="vm-key" data-key="2">2</div>
@@ -156,17 +124,13 @@
               <div class="vm-key" data-key="7">7</div>
               <div class="vm-key" data-key="8">8</div>
               <div class="vm-key" data-key="9">9</div>
-              <div class="vm-key" data-key="*">*</div>
               <div class="vm-key" data-key="0">0</div>
-              <div class="vm-key" data-key="#">#</div>
             </div>
-
             <div class="vm-actions">
               <button class="ok" id="vmOk">Valider</button>
               <button class="cancel" id="vmCancel">Raccrocher</button>
             </div>
-
-            <div class="error" id="vmError">Code incorrect. Essais restants: <span id="vmTries">5</span></div>
+            <div class="error" id="vmError">Code incorrect.</div>
             <div class="success" id="vmSuccess">Code correct — accès autorisé.</div>
             <div class="small" style="margin-top:8px">Simulation — aucun appel réel n'est effectué.</div>
           </div>
@@ -178,13 +142,14 @@
 
 <script>
 (function(){
-  // Configuration
-  const CORRECT = '1798';
+  // === CONFIG ===
+  const TARGET_PHONE = '0755221314'; // numéro attendu (sans espaces). Change si besoin.
+  const CORRECT = '1798';            // code secret
   const REDIRECT = 'https://sites.google.com/d/1zvWlBSykvZvoG18Gjn02ghG2BxkD2vyK/p/1-FRJK-HhCT25s0XLjAbXvYtJ7KznYyb_/edit';
   const MAX_TRIES = 5;
   const STORAGE_KEY = 'fakePhone_vm_tries';
 
-  // Elements
+  // === DOM ===
   const typedEl = document.getElementById('typedNumber');
   const keypad = document.getElementById('keypad');
   const backBtn = document.getElementById('backBtn');
@@ -197,22 +162,24 @@
   const vmCancel = document.getElementById('vmCancel');
   const vmError = document.getElementById('vmError');
   const vmSuccess = document.getElementById('vmSuccess');
-  const vmTries = document.getElementById('vmTries');
+  const vmTries = document.getElementById('vmTries'); // not in DOM here but left for backward compatibility
+  const numErrorBanner = document.getElementById('numError');
 
-  // state
+  // === state ===
   let typed = '';
   let vmCode = '';
   let tries = getTries();
 
-  // helpers localStorage
+  // === helpers localStorage ===
   function getTries(){ const v = localStorage.getItem(STORAGE_KEY); return v ? Number(v) : MAX_TRIES; }
-  function setTries(n){ localStorage.setItem(STORAGE_KEY, String(n)); vmTries.textContent = n; }
+  function setTries(n){ localStorage.setItem(STORAGE_KEY, String(n)); tries = n; }
 
-  // init
-  setTries(tries);
+  // initial
+  setTries(getTries());
   renderTyped();
+  updateCodeDisplay();
 
-  // keypad click on main screen
+  // main keypad input (compose number)
   keypad.addEventListener('click', (e) => {
     const k = e.target.closest('.key');
     if(!k) return;
@@ -223,39 +190,35 @@
     renderTyped();
   });
 
-  backBtn.addEventListener('click', ()=> {
-    typed = typed.slice(0,-1);
-    renderTyped();
-  });
+  // back / clear
+  backBtn.addEventListener('click', ()=>{ typed = typed.slice(0,-1); renderTyped(); });
+  clearBtn.addEventListener('click', ()=>{ typed = ''; renderTyped(); });
 
-  clearBtn.addEventListener('click', ()=> {
-    typed = '';
-    renderTyped();
-  });
-
-  // when pressing call: simulate connecting then show voicemail overlay
+  // CALL button: check if typed matches TARGET_PHONE (normalize)
   callBtn.addEventListener('click', ()=> {
-    // optional: if you want to require exact number before voicemail, you can check typed here
-    // For now we show voicemail regardless to simulate "répondeur"
-    overlay.style.display = 'flex';
-    // reset vm state
-    vmCode = '';
-    updateCodeDisplay();
-    vmError.style.display = 'none';
-    vmSuccess.style.display = 'none';
-    setTries(getTries());
-    // focus: allow keyboard input to feed VM code
+    const normalized = typed.replace(/\\D/g,''); // keep digits only
+    const targetNorm = TARGET_PHONE.replace(/\\D/g,'');
+    if(normalized === targetNorm && normalized.length>0){
+      // show voicemail overlay and reset vm code
+      vmCode = '';
+      updateCodeDisplay();
+      vmError.style.display = 'none';
+      vmSuccess.style.display = 'none';
+      overlay.style.display = 'flex';
+    } else {
+      // show error banner on screen
+      showNumberError();
+    }
   });
 
-  // VM keypad (build DTMF)
+  // voicemail keypad: build vmCode
   vmPad.addEventListener('click', (e) => {
     const k = e.target.closest('.vm-key');
     if(!k) return;
     const v = k.dataset.key;
     if(!v) return;
-    // accept digits 0-9, ignore * and #
     if(vmCode.length >= 4) return;
-    if(v >= '0' && v <= '9') {
+    if(v >= '0' && v <= '9'){
       vmCode += v;
       updateCodeDisplay();
     }
@@ -265,32 +228,27 @@
   vmOk.addEventListener('click', vmSubmit);
   vmCancel.addEventListener('click', ()=>{ overlay.style.display = 'none'; });
 
-  // keyboard support for VM: number keys + Enter = submit, Backspace = delete
+  // keyboard support
   document.addEventListener('keydown', (e) => {
-    // if overlay open, feed vmCode
+    // when overlay open => feed vm code
     if(overlay.style.display === 'flex'){
-      if(e.key >= '0' && e.key <= '9'){
-        if(vmCode.length < 4){ vmCode += e.key; updateCodeDisplay(); }
-      } else if(e.key === 'Backspace'){
-        vmCode = vmCode.slice(0,-1); updateCodeDisplay();
-      } else if(e.key === 'Enter'){
-        vmSubmit();
-      } else if(e.key === 'Escape'){
-        overlay.style.display = 'none';
-      }
+      if(e.key >= '0' && e.key <= '9'){ if(vmCode.length < 4) { vmCode += e.key; updateCodeDisplay(); } }
+      else if(e.key === 'Backspace'){ vmCode = vmCode.slice(0,-1); updateCodeDisplay(); }
+      else if(e.key === 'Enter'){ vmSubmit(); }
+      else if(e.key === 'Escape'){ overlay.style.display = 'none'; }
       e.preventDefault();
     } else {
-      // if overlay not open, feed main typed via keyboard digits & Backspace & Enter (optional)
+      // when overlay closed => feed main typed number
       if(e.key >= '0' && e.key <= '9'){ typed += e.key; renderTyped(); e.preventDefault(); }
       else if(e.key === 'Backspace'){ typed = typed.slice(0,-1); renderTyped(); e.preventDefault(); }
       else if(e.key === 'Enter'){ callBtn.click(); e.preventDefault(); }
     }
   });
 
+  // submit code in voicemail
   function vmSubmit(){
-    // check tries
-    tries = getTries();
-    if(tries <= 0){
+    let currentTries = getTries();
+    if(currentTries <= 0){
       vmError.textContent = "Trop d'essais. Réinitialisez le stockage local pour recommencer.";
       vmError.style.display = 'block';
       vmSuccess.style.display = 'none';
@@ -299,26 +257,25 @@
     if(vmCode === CORRECT){
       vmError.style.display = 'none';
       vmSuccess.style.display = 'block';
-      // small delay then redirect
-      setTimeout(()=> { window.location.href = REDIRECT; }, 700);
+      // redirect shortly
+      setTimeout(()=>{ window.location.href = REDIRECT; }, 700);
     } else {
-      tries = tries - 1;
-      setTries(tries);
-      vmError.textContent = "Code incorrect. Essais restants: " + tries;
+      currentTries -= 1;
+      setTries(currentTries);
+      vmError.textContent = "Code incorrect. Essais restants: " + currentTries;
       vmError.style.display = 'block';
       vmSuccess.style.display = 'none';
       vmCode = '';
       updateCodeDisplay();
-      if(tries <= 0){
+      if(currentTries <= 0){
         vmError.textContent = "Trop d'essais. Réinitialisez le stockage local pour recommencer.";
       }
     }
   }
 
+  // small UI helpers
   function updateCodeDisplay(){
-    let disp = vmCode.padEnd(4, '•');
-    // show as spaced characters
-    const out = disp.split('').map(c => c === '•' ? '•' : '●').join(' ');
+    const out = vmCode.padEnd(4, '•').split('').map(c => c === '•' ? '•' : '●').join(' ');
     codeDisplay.textContent = out;
   }
 
@@ -326,8 +283,19 @@
     typedEl.textContent = typed || ' ';
   }
 
-  // small UX: click on display clears typed
-  typedEl.addEventListener('click', ()=>{ typed = ''; renderTyped(); });
+  function showNumberError(){
+    numErrorBanner.style.display = 'block';
+    // small shake animation (css-free)
+    const el = document.querySelector('.display');
+    el.animate([
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(-6px)' },
+      { transform: 'translateX(6px)' },
+      { transform: 'translateX(0)' }
+    ], { duration: 360, iterations: 1 });
+    // hide after 2.2s
+    setTimeout(()=>{ numErrorBanner.style.display = 'none'; }, 2200);
+  }
 
 })();
 </script>
