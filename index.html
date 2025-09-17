@@ -1,92 +1,166 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title></title>
+<style>
+  body{margin:0;font-family:sans-serif;background:#222;display:flex;justify-content:center;align-items:center;height:100vh}
+  .frame{position:relative;width:400px;max-width:90%}
+  .frame img{width:100%;display:block}
+  .screen{
+    position:absolute;top:16%;left:9%;width:82%;height:68%;
+    background:#fff;border-radius:28px;box-shadow:inset 0 0 8px rgba(0,0,0,0.2);
+    display:flex;flex-direction:column;align-items:center;padding:10px;box-sizing:border-box
+  }
+  .display{width:100%;background:#f0f3f9;border-radius:12px;padding:12px;text-align:center;min-height:50px;margin-bottom:10px;position:relative}
+  .typed{font-size:20px;font-weight:bold;letter-spacing:2px}
+  .error-banner{display:none;color:#c92a2a;font-weight:bold;margin-top:5px}
+  .keypad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;width:100%;margin-bottom:10px}
+  .key{background:#fff;border-radius:12px;padding:15px;text-align:center;font-size:18px;font-weight:bold;cursor:pointer;box-shadow:0 3px 6px rgba(0,0,0,0.1)}
+  .controls{display:flex;gap:5px;width:100%}
+  .btn{flex:1;padding:10px;border-radius:10px;border:0;cursor:pointer;font-weight:bold}
+  .call{background:#10b981;color:#fff}
+  .back{background:#ddd}
+  .clear{background:#ff3b30;color:#fff}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:none;align-items:center;justify-content:center}
+  .voicemail{background:#fff;border-radius:14px;padding:20px;width:280px;text-align:center}
+  .code-display{font-size:22px;letter-spacing:3px;margin:10px 0;font-weight:bold}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+  .vm-key{background:#f2f4f8;padding:12px;border-radius:8px;font-weight:bold;cursor:pointer}
+  .vm-actions{display:flex;gap:8px;margin-top:10px}
+  .vm-actions button{flex:1;padding:10px;border-radius:8px;font-weight:bold;cursor:pointer}
+  .ok{background:#007aff;color:#fff}
+  .cancel{background:#eee}
+  .error{color:#c92a2a;display:none;margin-top:8px}
+  .success{color:#15803d;display:none;margin-top:8px}
+</style>
+</head>
+<body>
+  <div class="frame">
+    <img src="frame.png" alt="iPhone frame">
+    <div class="screen">
+      <div class="display">
+        <div class="typed" id="typedNumber"> </div>
+        <div class="error-banner" id="numError">Erreur — numéro inconnu</div>
+      </div>
+      <div class="keypad" id="keypad">
+        <div class="key" data-key="1">1</div>
+        <div class="key" data-key="2">2</div>
+        <div class="key" data-key="3">3</div>
+        <div class="key" data-key="4">4</div>
+        <div class="key" data-key="5">5</div>
+        <div class="key" data-key="6">6</div>
+        <div class="key" data-key="7">7</div>
+        <div class="key" data-key="8">8</div>
+        <div class="key" data-key="9">9</div>
+        <div class="key" data-key="0">0</div>
+      </div>
+      <div class="controls">
+        <button class="btn back" id="backBtn">←</button>
+        <button class="btn call" id="callBtn">Appeler</button>
+        <button class="btn clear" id="clearBtn">Effacer</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="voicemail">
+      <h3>Répondeur</h3>
+      <p>Entrez le code secret (4 chiffres)</p>
+      <div class="code-display" id="codeDisplay">••••</div>
+      <div class="pad" id="vmPad">
+        <div class="vm-key" data-key="1">1</div>
+        <div class="vm-key" data-key="2">2</div>
+        <div class="vm-key" data-key="3">3</div>
+        <div class="vm-key" data-key="4">4</div>
+        <div class="vm-key" data-key="5">5</div>
+        <div class="vm-key" data-key="6">6</div>
+        <div class="vm-key" data-key="7">7</div>
+        <div class="vm-key" data-key="8">8</div>
+        <div class="vm-key" data-key="9">9</div>
+        <div class="vm-key" data-key="0">0</div>
+      </div>
+      <div class="vm-actions">
+        <button class="ok" id="vmOk">Valider</button>
+        <button class="cancel" id="vmCancel">Annuler</button>
+      </div>
+      <div class="error" id="vmError">Code incorrect</div>
+      <div class="success" id="vmSuccess">Code correct !</div>
+    </div>
+  </div>
+
 <script>
 (function(){
-  // === CONFIG ===
-  const TARGET_PHONE = '0755221314'; // numéro attendu
-  const CORRECT = '1798';            // code secret
-  const REDIRECT = 'https://sites.google.com/d/1zvWlBSykvZvoG18Gjn02ghG2BxkD2vyK/p/1-FRJK-HhCT25s0XLjAbXvYtJ7KznYyb_/edit';
+  const TARGET_PHONE = "0755221314"; // numéro attendu
+  const CORRECT = "1798";            // code secret
+  const REDIRECT = "https://sites.google.com"; // redirection
 
-  // === DOM ===
-  const typedEl = document.getElementById('typedNumber');
-  const keypad = document.getElementById('keypad');
-  const backBtn = document.getElementById('backBtn');
-  const clearBtn = document.getElementById('clearBtn');
-  const callBtn = document.getElementById('callBtn');
-  const overlay = document.getElementById('overlay');
-  const codeDisplay = document.getElementById('codeDisplay');
-  const vmPad = document.getElementById('vmPad');
-  const vmOk = document.getElementById('vmOk');
-  const vmCancel = document.getElementById('vmCancel');
-  const vmError = document.getElementById('vmError');
-  const vmSuccess = document.getElementById('vmSuccess');
-  const numErrorBanner = document.getElementById('numError');
+  let typed = "";
+  let vmCode = "";
 
-  // === state ===
-  let typed = '';
-  let vmCode = '';
+  const typedEl = document.getElementById("typedNumber");
+  const numError = document.getElementById("numError");
+  const overlay = document.getElementById("overlay");
+  const codeDisplay = document.getElementById("codeDisplay");
+  const vmError = document.getElementById("vmError");
+  const vmSuccess = document.getElementById("vmSuccess");
 
+  function renderTyped(){ typedEl.textContent = typed || " "; }
   renderTyped();
-  updateCodeDisplay();
 
-  // keypad (compose numéro)
-  keypad.addEventListener('click', (e) => {
-    const k = e.target.closest('.key');
+  document.getElementById("keypad").addEventListener("click",(e)=>{
+    const k = e.target.dataset.key;
     if(!k) return;
-    typed += k.dataset.key;
+    typed += k;
     renderTyped();
   });
 
-  backBtn.addEventListener('click', ()=>{ typed = typed.slice(0,-1); renderTyped(); });
-  clearBtn.addEventListener('click', ()=>{ typed = ''; renderTyped(); });
+  document.getElementById("backBtn").onclick = ()=>{ typed=typed.slice(0,-1); renderTyped(); };
+  document.getElementById("clearBtn").onclick = ()=>{ typed=""; renderTyped(); };
 
-  // appel
-  callBtn.addEventListener('click', ()=> {
-    const normalized = typed.replace(/\D/g,'');
-    const targetNorm = TARGET_PHONE.replace(/\D/g,'');
+  document.getElementById("callBtn").onclick = ()=>{
+    const normalized = typed.replace(/\D/g,"");
+    const targetNorm = TARGET_PHONE.replace(/\D/g,"");
     if(normalized === targetNorm){
-      vmCode = '';
-      updateCodeDisplay();
-      vmError.style.display = 'none';
-      vmSuccess.style.display = 'none';
-      overlay.style.display = 'flex';
+      overlay.style.display="flex";
+      vmCode="";
+      updateCode();
+      vmError.style.display="none";
+      vmSuccess.style.display="none";
     } else {
-      showNumberError();
+      numError.style.display="block";
+      setTimeout(()=>{ numError.style.display="none"; },2000);
     }
-  });
+  };
 
-  // clavier répondeur
-  vmPad.addEventListener('click', (e) => {
-    const k = e.target.closest('.vm-key');
+  function updateCode(){
+    codeDisplay.textContent = vmCode.padEnd(4,"•").split("").join(" ");
+  }
+
+  document.getElementById("vmPad").addEventListener("click",(e)=>{
+    const k = e.target.dataset.key;
     if(!k) return;
-    if(vmCode.length < 4){
-      vmCode += k.dataset.key;
-      updateCodeDisplay();
+    if(vmCode.length<4){
+      vmCode+=k;
+      updateCode();
     }
   });
 
-  vmOk.addEventListener('click', ()=> {
-    if(vmCode === CORRECT){
-      vmError.style.display = 'none';
-      vmSuccess.style.display = 'block';
-      setTimeout(()=>{ window.location.href = REDIRECT; }, 700);
+  document.getElementById("vmOk").onclick=()=>{
+    if(vmCode===CORRECT){
+      vmSuccess.style.display="block";
+      vmError.style.display="none";
+      setTimeout(()=>{ window.location.href=REDIRECT; },1000);
     } else {
-      vmError.textContent = "Code incorrect.";
-      vmError.style.display = 'block';
-      vmSuccess.style.display = 'none';
-      vmCode = '';
-      updateCodeDisplay();
+      vmError.style.display="block";
+      vmSuccess.style.display="none";
+      vmCode="";
+      updateCode();
     }
-  });
-
-  vmCancel.addEventListener('click', ()=>{ overlay.style.display = 'none'; });
-
-  function updateCodeDisplay(){
-    const out = vmCode.padEnd(4, '•').split('').map(c => c==='•'?'•':'●').join(' ');
-    codeDisplay.textContent = out;
-  }
-  function renderTyped(){ typedEl.textContent = typed || ' '; }
-  function showNumberError(){
-    numErrorBanner.style.display = 'block';
-    setTimeout(()=>{ numErrorBanner.style.display = 'none'; }, 2000);
-  }
+  };
+  document.getElementById("vmCancel").onclick=()=>{ overlay.style.display="none"; };
 })();
 </script>
+</body>
+</html>
