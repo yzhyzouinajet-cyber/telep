@@ -50,6 +50,7 @@
   .vm-actions button{flex:1;padding:10px;border-radius:10px;border:0; font-weight:700; cursor:pointer}
   .vm-actions .ok{background:var(--accent); color:white}
   .vm-actions .cancel{background:#eee}
+  .vm-actions .now{background:#2563eb;color:white}
   .error{color:var(--error);margin-top:8px; display:none}
   .success{color:#15803d;margin-top:8px; display:none; font-weight:700}
   .small{font-size:12px;color:var(--muted); margin-top:8px}
@@ -115,6 +116,7 @@
             <div class="vm-actions">
               <button class="ok" id="vmOk">Valider</button>
               <button class="cancel" id="vmCancel">Raccrocher</button>
+              <button class="now" id="vmNow" style="display:none;">Aller tout de suite</button>
             </div>
             <div class="error" id="vmError" aria-live="polite">Code incorrect.</div>
             <div class="success" id="vmSuccess" aria-live="polite"></div>
@@ -128,8 +130,8 @@
 <script>
 (function(){
   // === CONFIG ===
-  const TARGET_PHONE = '0755221314'; // numéro attendu
-  const CORRECT = '1798';            // code secret
+  const TARGET_PHONE = '0755221314';
+  const CORRECT = '1798';
   const REDIRECT = 'https://sites.google.com/view/scenesdecrimes/accueil/coffre-num%C3%A9rique/telephone';
 
   // === DOM ===
@@ -143,6 +145,7 @@
   const vmPad = document.getElementById('vmPad');
   const vmOk = document.getElementById('vmOk');
   const vmCancel = document.getElementById('vmCancel');
+  const vmNow = document.getElementById('vmNow');
   const vmError = document.getElementById('vmError');
   const vmSuccess = document.getElementById('vmSuccess');
   const numErrorBanner = document.getElementById('numError');
@@ -150,6 +153,7 @@
   // === state ===
   let typed = '';
   let vmCode = '';
+  let countdownIntervalId = null;
 
   renderTyped();
   updateCodeDisplay();
@@ -176,12 +180,14 @@
       updateCodeDisplay();
       vmError.style.display = 'none';
       vmSuccess.style.display = 'none';
+      vmNow.style.display = 'none';
       overlay.style.display = 'flex';
     } else {
       showNumberError();
     }
   });
 
+  // vm keypad
   vmPad.addEventListener('click', (e) => {
     const k = e.target.closest('.vm-key');
     if(!k) return;
@@ -192,15 +198,25 @@
     updateCodeDisplay();
   });
 
+  // actions
   vmOk.addEventListener('click', vmSubmit);
-  vmCancel.addEventListener('click', ()=>{ overlay.style.display = 'none'; });
+  vmCancel.addEventListener('click', ()=>{ 
+    // clear countdown if any
+    clearCountdown();
+    overlay.style.display = 'none'; 
+  });
+  vmNow.addEventListener('click', () => {
+    clearCountdown();
+    window.location.href = REDIRECT;
+  });
 
+  // keyboard support
   document.addEventListener('keydown', (e) => {
     if(overlay.style.display === 'flex'){
       if(e.key >= '0' && e.key <= '9'){ if(vmCode.length < 4) { vmCode += e.key; updateCodeDisplay(); } }
       else if(e.key === 'Backspace'){ vmCode = vmCode.slice(0,-1); updateCodeDisplay(); }
       else if(e.key === 'Enter'){ vmSubmit(); }
-      else if(e.key === 'Escape'){ overlay.style.display = 'none'; }
+      else if(e.key === 'Escape'){ clearCountdown(); overlay.style.display = 'none'; }
       e.preventDefault();
     } else {
       if(e.key >= '0' && e.key <= '9'){ typed += e.key; renderTyped(); e.preventDefault(); }
@@ -213,13 +229,36 @@
     if(vmCode === CORRECT){
       vmError.style.display = 'none';
       vmSuccess.style.display = 'block';
-      vmSuccess.textContent = "Bravo ! Vous pouvez ouvrir l’enveloppe numéro 1.";
-      setTimeout(()=>{ window.location.href = REDIRECT; }, 5000); // redirection après 5 sec
+      vmNow.style.display = 'inline-block';
+      startCountdownAndRedirect(5);
     } else {
       vmError.style.display = 'block';
       vmSuccess.style.display = 'none';
+      vmNow.style.display = 'none';
       vmCode = '';
       updateCodeDisplay();
+    }
+  }
+
+  function startCountdownAndRedirect(seconds){
+    // clear any previous interval first
+    clearCountdown();
+    let counter = seconds;
+    vmSuccess.textContent = `Bravo ! Vous pouvez ouvrir l’enveloppe numéro 1. Redirection dans ${counter}s...`;
+    countdownIntervalId = setInterval(()=>{
+      counter--;
+      vmSuccess.textContent = `Bravo ! Vous pouvez ouvrir l’enveloppe numéro 1. Redirection dans ${counter}s...`;
+      if(counter <= 0){
+        clearCountdown();
+        window.location.href = REDIRECT;
+      }
+    }, 1000);
+  }
+
+  function clearCountdown(){
+    if(countdownIntervalId !== null){
+      clearInterval(countdownIntervalId);
+      countdownIntervalId = null;
     }
   }
 
@@ -235,12 +274,14 @@
   function showNumberError(){
     numErrorBanner.style.display = 'block';
     const el = document.querySelector('.display');
-    el.animate([
-      { transform: 'translateX(0)' },
-      { transform: 'translateX(-6px)' },
-      { transform: 'translateX(6px)' },
-      { transform: 'translateX(0)' }
-    ], { duration: 360, iterations: 1 });
+    if(el && el.animate){
+      el.animate([
+        { transform: 'translateX(0)' },
+        { transform: 'translateX(-6px)' },
+        { transform: 'translateX(6px)' },
+        { transform: 'translateX(0)' }
+      ], { duration: 360, iterations: 1 });
+    }
     setTimeout(()=>{ numErrorBanner.style.display = 'none'; }, 2200);
   }
 
